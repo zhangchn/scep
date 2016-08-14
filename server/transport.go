@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 
 	"github.com/go-kit/kit/endpoint"
 	kitlog "github.com/go-kit/kit/log"
@@ -45,13 +46,11 @@ func updateContext(ctx context.Context, r *http.Request) context.Context {
 // EncodeSCEPRequest encodes a SCEP http request
 func EncodeSCEPRequest(ctx context.Context, r *http.Request, request interface{}) error {
 	req := request.(SCEPRequest)
-	params := r.URL.Query()
-	params.Set("operation", req.Operation)
+	var msg string
 	switch r.Method {
 	case "GET":
 		if len(req.Message) > 0 {
-			encoded := base64.StdEncoding.EncodeToString(req.Message)
-			params.Set("message", encoded)
+			msg = base64.StdEncoding.EncodeToString(req.Message)
 		}
 	case "POST":
 		var buf bytes.Buffer
@@ -63,7 +62,7 @@ func EncodeSCEPRequest(ctx context.Context, r *http.Request, request interface{}
 	default:
 		return errors.New("method not supported")
 	}
-	r.URL.RawQuery = params.Encode()
+	r.URL.RawQuery = fmt.Sprintf("operation=%v&message=%v", url.QueryEscape(req.Operation), url.QueryEscape(msg))
 	return nil
 }
 

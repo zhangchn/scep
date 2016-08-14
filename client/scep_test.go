@@ -2,6 +2,7 @@ package scepclient
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
@@ -73,7 +74,11 @@ func TestPKIOperationGET(t *testing.T) {
 	client := NewClient(server.URL + "/scep")
 	ctx := context.Background()
 
-	resp, err := client.PKIOperation(ctx, []byte("foobarbaz"))
+	pkcsreq, err := ioutil.ReadFile("../scep/testdata/PKCSReq.der")
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp, err := client.PKIOperation(ctx, pkcsreq)
 	if err != nil {
 		t.Fatal(err)
 	}
